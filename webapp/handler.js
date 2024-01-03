@@ -17,29 +17,39 @@ const sheet = ss.getSheetByName(tableName)
 const players = sheet.getRange("A5:A")
 const rewards = sheet.getRange("B4:Z4")
 
-// Google Sheet webapp's post request handler
-// This does not return anything to the client
+/*
+- Google Sheet webapp's post request handler
+- This does not return anything to the client
+- example request body schema:
+{
+    "id": "afreehp",
+    "result": "3분 asmr"
+}
+*/
 function doPost(e) {
-    Logger.log("recordRoulette is called: " + e)
-    if (e === undefined || e === null || e.parameter === null) {
+    // Logger.log("recordRoulette is called: " + e)
+    if (e === undefined || e === null || e.postData === null) {
         return // invalid request; do nothing
     }
 
-    targetId = e.parameter[paramKey_id]
-    targetReward = e.parameter[paramKey_reward]
-    Logger.log("incrementing userID: " + targetId + "for reward: " + targetReward)
+    var jsonString = e.postData.getDataAsString();
+    var jsonData = JSON.parse(jsonString);
     
+    targetId = jsonData[paramKey_id]
+    targetReward = jsonData[paramKey_reward]
+    // Logger.log("incrementing userID: " + targetId + "for reward: " + targetReward)
+
     var userRow = getOrInsertPlayerRow(players, targetId)
     var rewardCol = getRewardColumn(rewards, targetReward)
-    
-    
+
+
     // boundary check
     if (userRow < topMargin || rewardCol < leftMargin) {
         return
     }
-    
+
     // update the target cell
-    Logger.log("setting the target cell: (" + userRow + ", " + rewardCol + ")")
+    // Logger.log("setting the target cell: (" + userRow + ", " + rewardCol + ")")
     var targetCell = sheet.getRange(userRow, rewardCol)
     var currVal = targetCell.getValue()
     if (typeof(currVal) === "number") {
@@ -93,7 +103,7 @@ function getOrInsertPlayerRow(columnRange, userId) {
 }
 
 
-// skip if reward's not found
+// skip the request if reward's not found
 // no need to insert anything unlike userID search
 function getRewardColumn(rowRange, condition) {
     if (!condition || typeof(condition) !== "string" || condition === "") {
@@ -107,11 +117,11 @@ function getRewardColumn(rowRange, condition) {
     for (var i = 0; i < values.length; i++) {
         cnt++
         if (values[i] === undefined || values[i] === null || typeof(values[i]) !== "string") {
-        // invalid ground; skipping...
-        continue
+            // invalid ground; skipping...
+            continue
         }
         if (values[i].includes(condition)) {
-        break // found
+            break // found
         }
     }
 
