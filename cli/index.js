@@ -24,14 +24,13 @@ var userConfig = {
 // this helper assumes that the data is always valid -- validation must be done by the caller
 async function postData(data) {
     const uid = data.data.id
-    const result = "공포게임"
-    // TODO dynamically extract roulette result from the widget?
+    // TODO dynamically fetch roulette result from afreehp alartlist
+    const result = "공포게임" // !!! plceholder
 
     console.log(data)
     console.log(`${userConfig.webapp_url}?id=${uid}&result=${result}`)
 
     // ===== send player uid and roulette result to Google sheet webapp's post API
-    // is it efficient to init xhr every time? idk
     xhr.open('POST', userConfig.webapp_url)
     xhr.setRequestHeader("Accept", "application/json")
     xhr.setRequestHeader("Content-Type", "application/json")
@@ -46,10 +45,8 @@ async function postData(data) {
 function handleData(data) {
     try {
         if (data.data !== undefined && data.data.value !== undefined && data.data.type !== undefined) {
-            let type = data.data.type
-            let value = data.data.value
             if (data.data.broad === "afreeca") {
-                if (type == "star" && value == 33) {
+                if (data.data.type == "star" && data.data.value == 33) {
                     postData(data)
                 }
             } else {
@@ -93,18 +90,9 @@ function connectAfreehp() {
     
     socketAfreehp.on("connect", () => {
         console.log("Afreehp Connected")
-        // JOIN: emit idx to fetch the alarms
+        // emit idx to fetch the alarms
         socketAfreehp.emit("page", {
             idx: userConfig.idx
-        })
-        socketAfreehp.emit("pagecmd", {
-            type:"alertload",
-            sub:"roulette",
-            idx: userConfig.idx,
-            pageid: "alert",
-            subpage: 0,
-            id: 123,
-            value: "역팬"
         })
     })
     

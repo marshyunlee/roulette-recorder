@@ -28,7 +28,7 @@ const rewards = sheet.getRange("B4:Z4")
 */
 function doPost(e) {
     // Logger.log("recordRoulette is called: " + e)
-    if (e === undefined || e === null || e.postData === null) {
+    if (e === undefined || e === null || e.postData === undefined || e.postData === null) {
         return // invalid request; do nothing
     }
 
