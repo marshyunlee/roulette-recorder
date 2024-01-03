@@ -38,10 +38,10 @@
     1. Single interface to take the request defined above
 
 # Demo
-!!! TBD !!!
+![demo](demo.mov)
 
 ```
-⚠️ Currently, the project usability is specifically targeted to 내나라
+⚠️ Currently, the project usability is specifically targeted to the following doc
 업보:
 - https://docs.google.com/spreadsheets/d/130R8upqQTaU3kbXOP6ny0qNWk0jOOezZfpw0Liy2sGg/edit?usp=sharing
 ```    
