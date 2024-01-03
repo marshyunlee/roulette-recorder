@@ -38,8 +38,6 @@
     1. Single interface to take the request defined above
 
 # Demo
-![demo](demo.mov)
-
 ```
 ⚠️ Currently, the project usability is specifically targeted to the following doc
 업보:
