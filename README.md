@@ -1,6 +1,6 @@
 # roulette-recorder
 
-
+![flowchart](image.png)
 
 # Project TODO
 - Well, this is just an overnight toy project. No roadmap/timeline ATM.
