@@ -65,16 +65,16 @@ function getOrInsertPlayerRow(columnRange, userId) {
     for (var i = 0; i < values.length; i++) {
         idx++ // increment regardless
         if (values[i] === undefined || values[i] === null || values[i].length === 0) {
-        // invalid condition; skip
-        continue
+            // invalid condition; skip
+            continue
         }
 
         var targetVal = values[i].shift()
         if (targetVal.includes(userId)) {
-        isFound = true
-        break
+            isFound = true
+            break
         } else if (targetVal === "" && emptySlot === 0) {
-        emptySlot = idx
+            emptySlot = idx
         }
     }
 
