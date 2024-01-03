@@ -6,14 +6,15 @@
 - Well, this is just an overnight toy project. No roadmap/timeline ATM.
 - Other than FreecShot reimplementation (#1), most of the TODOs are for initial setup automation or usability improvements.
 
-1. [P0] Someone may takeover the project to transplant the data crawling part into FreecShot platform
+1. [P00] Implement Afreehp's alarmlist crawling approach instead of packet parsing
+2. [P0] Someone may takeover the project to transplant the data crawling part into FreecShot platform
     1. AfreecaTV FreecShot: https://bj.afreecatv.com/afstudio/posts/50746022
-2. [P0] reorganize packet data types -- currently the roulette is determined by the value (33). It should use the packet's type and subpage
+3. [P0] reorganize packet data types -- currently the roulette is determined by the value (33). It should use the packet's type and subpage
 
-3. [P0.5 for compatibility] Build binary + add Homebrew formular so that anyone can download the cmd; https://docs.brew.sh/Adding-Software-to-Homebrew
+4. [P0.5 for compatibility] Build binary + add Homebrew formular so that anyone can download the cmd; https://docs.brew.sh/Adding-Software-to-Homebrew
 
-4. [P1] Re-publish the google sheet’s App Script into a stand-alone library, so that it can be re-used by simple import
-5. [P1] Provide a template for rewards mappings and the records sheets, so that the script library can be used without additional modification, as long as the contents complies to the templates
+5. [P1] Re-publish the google sheet’s App Script into a stand-alone library, so that it can be re-used by simple import
+6. [P1] Provide a template for rewards mappings and the records sheets, so that the script library can be used without additional modification, as long as the contents complies to the templates
     
 
 
@@ -66,10 +67,18 @@
 
 ## Approach
 
-### Option 1 - Afreehp URL - preferred
+### Option 1 - Monitoring Afreehp alarmlist - selected
+- Afreehp provides an alarm history with capability to sort out the list based on the alarm category, such as donation, roulette, follow and etc.
+- While the alarm list provides timestamp along with the names and roulette result, all the required information can be acquired by crawling the refreshed alarm page.
+
+- Instead of naive HTML crawling with Selenium, the service may still listen to the socket packets to (sort of) simulate donation notification, then requests the alarm page HTML to parse the data. With that, the service can simply send the post request to Google sheet webapp to update the records.
+
+### Option 2 - Afreehp Packet Parsing - preferred - won't work
+
+!!! won't do, since the roulette computation is done by client side, and the packet from Afreehp does not include any roulette result data.
 
 - Afreehp, a third-party utility, provides a URL-based alert configuration geared towards broadcasting support programs such as OBS, Xsplit, and FreecShot etcetc
-- What if the auto recorder connects to the alertbox URL and decompose the http elems to extract the data?
+- the auto-recording service may be able to connect to Afreehp server to retrieve the shared packets to the widget, so that the service would be able to acquire donoation data
     - example alertbox URL: http://afreehp.kr/page/VZiXlq2ax8bYmqSVwJY
 
 ```go
@@ -79,7 +88,7 @@
 
 ```
 
-### Option 2 - realtime chat crawling - won’t do?
+### Option 3 - realtime chat crawling - won’t do?
 
 - Current AfreecaTV platform isn’t suitable for bot-based automation due to the privacy and identity verification policy
 - Still, this approach may not be able to handle unexpected problems in the Chromium or the streaming platform
