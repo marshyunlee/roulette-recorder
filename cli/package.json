@@ -1,0 +1,23 @@
+{
+    "name": "roulette-recorder",
+    "version": "1.0.0",
+    "description": "",
+    "bin": {
+        "DonationAlertAPI": "./index.js"
+    },
+    "main": "index.js",
+    "scripts": {
+        "debug": "nodemon index.js"
+    },
+    "author": "Marsh",
+    "dependencies": {
+        "console-stamp": "^3.0.2",
+        "jsdom": "23.0.1",
+        "node-fetch": "^2.6.1",
+        "nodemon": "^3.0.2",
+        "request": "^2.88.2",
+        "socket.io-client": "^2.3.1",
+        "websocket": "^1.0.34",
+        "xhr2": "^0.2.1"
+    }
+}
