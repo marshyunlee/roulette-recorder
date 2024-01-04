@@ -39,18 +39,18 @@ function doPost(e) {
     targetReward = jsonData[paramKey_reward]
     // Logger.log("incrementing userID: " + targetId + "for reward: " + targetReward)
 
-    var userRow = getOrInsertPlayerRow(players, targetId)
-    var rewardCol = getRewardColumn(rewards, targetReward)
+    var userIdx   = getOrInsertConditionFromRange(players, targetId, true) // find uid from players column range (left-most column)
+    var rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false) // find reward from rewards row range (top-most row)
 
 
     // boundary check
-    if (userRow < topMargin || rewardCol < leftMargin) {
+    if (userIdx < topMargin || rewardIdx < leftMargin) {
         return
     }
 
     // update the target cell
-    // Logger.log("setting the target cell: (" + userRow + ", " + rewardCol + ")")
-    var targetCell = sheet.getRange(userRow, rewardCol)
+    // Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
+    var targetCell = sheet.getRange(userIdx, rewardIdx)
     var currVal = targetCell.getValue()
     if (typeof(currVal) === "number") {
         targetCell.setValue(currVal + 1)
@@ -59,28 +59,29 @@ function doPost(e) {
     }
 }
 
-// returns the row number of the FIRST userID found in the column
-// if not found, insert the user to the first available row (i.e., to the first empty cell)
-function getOrInsertPlayerRow(columnRange, userId) {
-    if (!userId || typeof(userId) !== "string" || userId === "") {
+// returns the index number of the FIRST condition found in the single-lined range
+// if not found, insert the condition to the first available row (i.e., to the first empty cell)
+function getOrInsertConditionFromRange(targetRange, condition, isRangeColumn) {
+    if (!condition || typeof(condition) !== "string" || condition === "") {
         return 0
     }
-    // value pool to iterate
-    var values = columnRange.getValues()
 
-    // iterative search for the userId with substring condition
+    var values = isRangeColumn ? targetRange.getValues() : targetRange.getValues()[0]
+    let margin = isRangeColumn ? topMargin : leftMargin
+
+    // iterative search for the condition as substring
     var idx = 0
     var emptySlot = 0
     var isFound = false
     for (var i = 0; i < values.length; i++) {
         idx++ // increment regardless
-        if (values[i] === undefined || values[i] === null || values[i].length === 0) {
+        if (values[i] === undefined || values[i] === null) {
             // invalid condition; skip
             continue
         }
 
-        var targetVal = values[i].shift()
-        if (targetVal.includes(userId)) {
+        var targetVal = isRangeColumn && values[i].length !== 0 ? values[i].shift() : values[i]
+        if (targetVal.includes(condition)) {
             isFound = true
             break
         } else if (targetVal === "" && emptySlot === 0) {
@@ -90,40 +91,14 @@ function getOrInsertPlayerRow(columnRange, userId) {
 
     // return the idx ONLY if found; otherwise return the new inserted val
     if (isFound) {
-        return (idx + topMargin)
+        return (idx + margin)
     } else {
         // insert the user to the first empty row
-        emptySlot += topMargin
-        var cellToInsert = sheet.getRange(emptySlot, 1) 
-        cellToInsert.setValue(userId)
+        emptySlot += margin
+        var cellToInsert = isRangeColumn ? sheet.getRange(emptySlot, leftMargin) : sheet.getRange(topMargin, emptySlot)
+        cellToInsert.setValue(condition)
         return emptySlot
     }
 
     // not reachable
-}
-
-
-// skip the request if reward's not found
-// no need to insert anything unlike userID search
-function getRewardColumn(rowRange, condition) {
-    if (!condition || typeof(condition) !== "string" || condition === "") {
-        return 0
-    }
-
-    // single row scan for rewards
-    var values = rowRange.getValues()[0]
-
-    var cnt = 0
-    for (var i = 0; i < values.length; i++) {
-        cnt++
-        if (values[i] === undefined || values[i] === null || typeof(values[i]) !== "string") {
-            // invalid ground; skipping...
-            continue
-        }
-        if (values[i].includes(condition)) {
-            break // found
-        }
-    }
-
-    return (cnt + leftMargin)
 }

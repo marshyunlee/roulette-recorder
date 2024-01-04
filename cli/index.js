@@ -16,7 +16,7 @@ var userConfig = {
     // afreehp's donation page URL
     "alertbox_url": "http://afreehp.kr/page/VZiXlq2ax8bYmqSVwJY",
     // google sheet's webapp endpoint URL
-    "webapp_url": "https://script.google.com/macros/s/AKfycbyljr7R8qCBe05mv-zwx0Bg9cyoyOtXTTlZEoH4P8sH21JBVaZMN6MNR9GZj93xjuzC/exec"
+    "webapp_url": "https://script.google.com/macros/s/AKfycbzQtltuWMADmVGLFKlPayZSn298pfraoFNAXAfIz1rmlgIQDYaIp0bJ4vBd1obETnIx/exec"
 }
 
 // postData sends a request to the Google sheet webapp's post endpoint
