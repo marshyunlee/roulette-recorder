@@ -2,20 +2,24 @@
 // https://docs.google.com/spreadsheets/d/1mpTFPW88Bs8T3vT_ltSYlvxRniT3WoT5bVp9an4l-Ec/edit#gid=0
 const sheetID = "1mpTFPW88Bs8T3vT_ltSYlvxRniT3WoT5bVp9an4l-Ec"
 // table name that is found at the left bottom of the actual sheet.
-const tableName = "시트1"
-const topMargin = 4
+const tableName = "대시보드"
+const indexTableName = "기록"
+const topMargin = 2
 const leftMargin = 1
 
 const paramKey_id = "id"
+const paramKey_time = "time"
 const paramKey_reward = "result"
 
 const ss= SpreadsheetApp.openById(sheetID)
 const sheet = ss.getSheetByName(tableName)
+const indexTable = ss.getSheetByName(indexTableName)
 
 // TODO - beware of the hardcoded cell location. Make dynamic or create sheet template
 // probably better to use stream iteration? idk
-const players = sheet.getRange("A5:A")
-const rewards = sheet.getRange("B4:Z4")
+const players = sheet.getRange("A3:A")
+const rewards = sheet.getRange("B2:Z2")
+const indexRange = indexTable.getRange("A3:A")
 
 /*
 - Google Sheet webapp's post request handler
@@ -23,6 +27,7 @@ const rewards = sheet.getRange("B4:Z4")
 - example request body schema:
 {
     "id": "afreehp",
+    "time": 123123123,
     "result": "3분 asmr"
 }
 */
@@ -32,31 +37,55 @@ function doPost(e) {
         return // invalid request; do nothing
     }
 
-    var jsonString = e.postData.getDataAsString();
-    var jsonData = JSON.parse(jsonString);
+    let jsonString = e.postData.getDataAsString();
+    let jsonData = JSON.parse(jsonString);
     
     targetId = jsonData[paramKey_id]
+    targetTime = jsonData[paramKey_time]
     targetReward = jsonData[paramKey_reward]
-    // Logger.log("incrementing userID: " + targetId + "for reward: " + targetReward)
+    
+    // targetId = "gkslql456"
+    // targetTime = "1704800620934"
+    // targetReward = "방셀"
+    // Logger.log("incrementing userID: " + targetId + ":" + targetTime + " for reward: " + targetReward)
 
-    var userIdx   = getOrInsertConditionFromRange(players, targetId, true) // find uid from players column range (left-most column)
-    var rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false) // find reward from rewards row range (top-most row)
+    // indexTable check
+    let key = `${targetId}:${targetTime}`
+    // Logger.log(isKeyUnique(key))
+    if (isKeyUnique(key)) {
+        indexTable.appendRow([key, targetReward])
 
+        let userIdx   = getOrInsertConditionFromRange(players, targetId, true) // find uid from players column range (left-most column)
+        let rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false) // find reward from rewards row range (top-most row)
 
-    // boundary check
-    if (userIdx < topMargin || rewardIdx < leftMargin) {
-        return
+        // boundary check
+        if (userIdx < topMargin || rewardIdx < leftMargin) {
+            return
+        }
+
+        // update the target cell
+        // Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
+        let targetCell = sheet.getRange(userIdx, rewardIdx)
+        let currVal = targetCell.getValue()
+        if (typeof(currVal) === "number") {
+            targetCell.setValue(currVal + 1)
+        } else {
+            targetCell.setValue(1)
+        }
     }
+}
 
-    // update the target cell
-    // Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
-    var targetCell = sheet.getRange(userIdx, rewardIdx)
-    var currVal = targetCell.getValue()
-    if (typeof(currVal) === "number") {
-        targetCell.setValue(currVal + 1)
-    } else {
-        targetCell.setValue(1)
+function isKeyUnique(key) {
+    let idxs = indexRange.getValues()
+    idxs = idxs.filter(e => e[0])
+
+    for (let i = 0; i < idxs.length; i++) {
+        let curr = idxs[i][0]
+        if (curr === "" || curr === key) {
+            return false
+        }
     }
+    return true
 }
 
 // returns the index number of the FIRST condition found in the single-lined range
@@ -66,22 +95,22 @@ function getOrInsertConditionFromRange(targetRange, condition, isRangeColumn) {
         return 0
     }
 
-    var values = isRangeColumn ? targetRange.getValues() : targetRange.getValues()[0]
+    let values = isRangeColumn ? targetRange.getValues() : targetRange.getValues()[0]
     let margin = isRangeColumn ? topMargin : leftMargin
 
     // iterative search for the condition as substring
-    var idx = 0
-    var emptySlot = 0
-    var isFound = false
-    for (var i = 0; i < values.length; i++) {
+    let idx = 0
+    let emptySlot = 0
+    let isFound = false
+    for (let i = 0; i < values.length; i++) {
         idx++ // increment regardless
         if (values[i] === undefined || values[i] === null) {
             // invalid condition; skip
             continue
         }
 
-        var targetVal = isRangeColumn && values[i].length !== 0 ? values[i].shift() : values[i]
-        if (targetVal.includes(condition)) {
+        let targetVal = isRangeColumn && values[i].length !== 0 ? values[i].shift() : values[i]
+        if (typeof(targetVal) === "string" && targetVal.includes(condition)) {
             isFound = true
             break
         } else if (targetVal === "" && emptySlot === 0) {
@@ -95,7 +124,7 @@ function getOrInsertConditionFromRange(targetRange, condition, isRangeColumn) {
     } else {
         // insert the user to the first empty row
         emptySlot += margin
-        var cellToInsert = isRangeColumn ? sheet.getRange(emptySlot, leftMargin) : sheet.getRange(topMargin, emptySlot)
+        let cellToInsert = isRangeColumn ? sheet.getRange(emptySlot, leftMargin) : sheet.getRange(topMargin, emptySlot)
         cellToInsert.setValue(condition)
         return emptySlot
     }

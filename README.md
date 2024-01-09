@@ -6,7 +6,14 @@
 - Well, this is just an overnight toy project. No roadmap/timeline ATM.
 - Other than FreecShot reimplementation (#1), most of the TODOs are for initial setup automation or usability improvements.
 
-1. [P00] Implement Afreehp's alarmlist crawling approach instead of packet parsing
+wanted to replace the service with Chrome extension; but the review process will take forever + accessing js variables from contentscript scope will probably require a good reasoning to Google to pass the review.   pending -- checkout ./chrome_extension directory     
+You may find some useful docs for NodeJS + Chrome extension development here:
+- https://stackoverflow.com/questions/3955803/chrome-extension-get-page-variables-in-content-script
+- https://stackoverflow.com/questions/46460962/how-to-get-input-value-in-chrome-extension
+- https://zuminternet.github.io/Zum-Chrome-Extension/
+- https://velog.io/@wisdom_lee/%ED%81%AC%EB%A1%AC-%ED%99%95%EC%9E%A5-%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8Chrome-extension-%EA%B0%9C%EB%B0%9C-%EA%B0%80%EC%9D%B4%EB%93%9C
+
+
 2. [P0] Someone may takeover the project to transplant the data crawling part into FreecShot platform
     1. AfreecaTV FreecShot: https://bj.afreecatv.com/afstudio/posts/50746022
 3. [P0] reorganize packet data types -- currently the roulette is determined by the value (33). It should use the packet's type and subpage
@@ -16,7 +23,6 @@
 5. [P1] Re-publish the google sheet’s App Script into a stand-alone library, so that it can be re-used by simple import
 6. [P1] Provide a template for rewards mappings and the records sheets, so that the script library can be used without additional modification, as long as the contents complies to the templates
     
-
 
 
 # Required Specs

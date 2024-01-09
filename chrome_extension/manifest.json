@@ -1,0 +1,18 @@
+{
+    "name": "룰렛 기록기",
+    "version": "1.0.0",
+    "description": "아프리카도우미 룰렛 자동기록기 | afreehp roulette auto recorder",
+    "manifest_version": 3,
+    "author": "Marshall Lee",
+    "action":{
+        "default_popup": "html/popup.html",
+        "default_title": "Afreehp Roulette Recorder"
+    },
+    "background": {
+        "service_worker": "scripts/background.js",
+        "type": "module"
+    },
+    "permissions": [
+        "storage"
+    ]
+}
