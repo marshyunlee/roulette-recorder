@@ -1,6 +1,6 @@
 // Use your own document ID. This is the hash string found in the URL. For example:
 // https://docs.google.com/spreadsheets/d/1mpTFPW88Bs8T3vT_ltSYlvxRniT3WoT5bVp9an4l-Ec/edit#gid=0
-const sheetID = "1mpTFPW88Bs8T3vT_ltSYlvxRniT3WoT5bVp9an4l-Ec"
+const sheetID = "[스프레드시트 ID]"
 // table name that is found at the left bottom of the actual sheet.
 const tableName = "대시보드"
 const indexTableName = "기록"
