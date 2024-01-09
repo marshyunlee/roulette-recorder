@@ -10,9 +10,9 @@ require('console-stamp')(console, {
 // !!!!! please update this configs before use
 var userConfig = {
     // afreehp's donation page URL
-    "alertbox_url": "http://afreehp.kr/page/VZiXlq2ax8bYmqSVwJY",
+    "alertbox_url": "[아프리카 도우미 후원 위젯 URL]",
     // google sheet's webapp endpoint URL
-    "webapp_url": "https://script.google.com/macros/s/AKfycbwOw9D7H515MuWFrOtcr5IYsJHoM5Pz1AXuapPtI6SO5VDcZK9VipzoKyApSxWhZrc/exec",
+    "webapp_url": "[구글 시트 웹앱 API URL]",
 }
 
 // runtime variables
@@ -28,7 +28,7 @@ var isPosting = false
 var keyCache = new Set()
 
 // postData sends a request to the Google sheet webapp's post endpoint
-// param examples: [URL]?id=gkslql456&result=손편지
+// param examples: [URL]?id=asdf&result=손편지
 // this helper assumes that the data is always valid -- validation must be done by the caller
 async function postData(data) {
     isPosting = true
