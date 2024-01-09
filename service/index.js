@@ -65,7 +65,7 @@ async function postData(data) {
                 "result": "${result}"
             }`
             await xhr.send(body)
-            await sleep(5000)
+            await sleep(2000)
         }
     }
     isPosting = false
@@ -97,10 +97,7 @@ function connectAfreehp() {
     socketAfreehp.on("cmd", (data) => {
         try {
             // alertlist check
-            if (data.sub === "ping") {
-                // ping interval seems to be around 20-30sec?
-                // socketAfreehp.emit("setupcmd", { type:"alertlist", sub:"load", idx:userConfig.idx, pageid:"0", subpage:"0" })
-            } else if (data.type === "alertload" && data.sub === "load" && data.data !== undefined && data.data.length > 0) {
+            if (data.type === "alertload" && data.sub === "load" && data.data !== undefined && data.data.length > 0) {
                 // retrieve all donation history
                 postData(data.data)
             }
@@ -148,7 +145,7 @@ async function main() {
             }
         } else {
             console.error("non-200 status code retrieved from alertbox_utl. statusCode=" + response.statusCode)
-        } 
+        }
     } catch (err) {
         console.error("Error occured during afreehp.idx parsing. error=" + err.toString())
     }

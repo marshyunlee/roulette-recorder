@@ -13,14 +13,9 @@ require('console-stamp')(console, {
 // !!!!! please update this configs before use
 var userConfig = {
     // afreehp's donation page URL
-    "alertbox_url": "http://afreehp.kr/page/VZiXlq2ax8bYmqSVwJY",
+    "alertbox_url": "[URL]",
     // google sheet's webapp endpoint URL
-    "webapp_url": "https://script.google.com/macros/s/AKfycbzQtltuWMADmVGLFKlPayZSn298pfraoFNAXAfIz1rmlgIQDYaIp0bJ4vBd1obETnIx/exec",
-    
-    // ===== Selenium chrome driver configurations =====
-    // you may find the following information from the applicationmetadata (chrome://version) in Chrome browser
-    "chrome_profile_path": "/Users/bytedance/Library/Application Support/Google/Chrome",
-    "chrome_profile": "Profile 4"
+    "webapp_url": "[URL]"
 }
 
 // runtime variables
@@ -50,7 +45,7 @@ var xhr = new XMLHttpRequest()
 // }
 
 // postData sends a request to the Google sheet webapp's post endpoint
-// param examples: [URL]?id=gkslql456&result=손편지
+// param examples: [URL]?id=afreehp&result=test
 // this helper assumes that the data is always valid -- validation must be done by the caller
 async function postData(data) {
     const uid = data.data.id

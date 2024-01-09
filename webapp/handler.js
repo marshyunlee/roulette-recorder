@@ -1,6 +1,3 @@
-// Use your own document ID. This is the hash string found in the URL. For example:
-// https://docs.google.com/spreadsheets/d/1mpTFPW88Bs8T3vT_ltSYlvxRniT3WoT5bVp9an4l-Ec/edit#gid=0
-const sheetID = "[스프레드시트 ID]"
 // table name that is found at the left bottom of the actual sheet.
 const tableName = "대시보드"
 const indexTableName = "기록"
@@ -11,7 +8,7 @@ const paramKey_id = "id"
 const paramKey_time = "time"
 const paramKey_reward = "result"
 
-const ss= SpreadsheetApp.openById(sheetID)
+const ss= SpreadsheetApp.getActiveSpreadsheet()
 const sheet = ss.getSheetByName(tableName)
 const indexTable = ss.getSheetByName(indexTableName)
 
@@ -44,7 +41,7 @@ function doPost(e) {
     targetTime = jsonData[paramKey_time]
     targetReward = jsonData[paramKey_reward]
     
-    // targetId = "gkslql456"
+    // targetId = "afreehp"
     // targetTime = "1704800620934"
     // targetReward = "방셀"
     // Logger.log("incrementing userID: " + targetId + ":" + targetTime + " for reward: " + targetReward)
