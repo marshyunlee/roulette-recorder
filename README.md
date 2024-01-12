@@ -2,6 +2,13 @@
 
 ![flowchart](image.png)
 
+
+# SETUP - Windows 11
+- update ./service/config.json file with your own URLs
+- copy ./service/app.exe and ./service/config.json
+- go to the path below, and paste the files. This may require admin access
+- C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
+
 # Project TODO
 - Well, this is just an overnight toy project. No roadmap/timeline ATM.
 - Other than FreecShot reimplementation (#1), most of the TODOs are for initial setup automation or usability improvements.
