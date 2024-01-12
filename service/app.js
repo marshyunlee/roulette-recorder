@@ -156,7 +156,7 @@ async function main() {
     connectAfreehp()
 }
 
-fs.readFile("./config.json")
+fs.readFile("C:/config.json")
     .then((data) => {
         userConfig = JSON.parse(data)
         if (userConfig.alertbox_url !== undefined || userConfig.webapp_url !== undefined) {

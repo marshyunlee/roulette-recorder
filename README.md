@@ -4,10 +4,8 @@
 
 
 # SETUP - Windows 11
-- update ./service/config.json file with your own URLs
-- copy ./service/app.exe and ./service/config.json
-- go to the path below, and paste the files. This may require admin access
-- C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
+- copy `./service/config.json` to `C:/` and update with your own URLs
+- copy `./service/app.exe` to `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp`
 
 # Project TODO
 - Well, this is just an overnight toy project. No roadmap/timeline ATM.
