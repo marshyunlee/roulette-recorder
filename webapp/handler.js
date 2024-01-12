@@ -1,8 +1,11 @@
 // table name that is found at the left bottom of the actual sheet.
 const tableName = "대시보드"
 const indexTableName = "기록"
+const MAX_API_RECORD = 999
+
 const topMargin = 2
 const leftMargin = 1
+const firstIndexItemIdx = 3
 
 const paramKey_id = "id"
 const paramKey_time = "time"
@@ -34,22 +37,24 @@ function doPost(e) {
         return // invalid request; do nothing
     }
 
-    let jsonString = e.postData.getDataAsString()
-    let jsonData = JSON.parse(jsonString)
+    let jsonString = e.postData.getDataAsString();
+    let jsonData = JSON.parse(jsonString);
     
     targetId = jsonData[paramKey_id]
     targetTime = jsonData[paramKey_time]
     targetReward = jsonData[paramKey_reward]
     
     // targetId = "afreehp"
-    // targetTime = "1704800620934"
+    // targetTime = "2112"
     // targetReward = "방셀"
     // Logger.log("incrementing userID: " + targetId + ":" + targetTime + " for reward: " + targetReward)
 
     // indexTable check
     let key = `${targetId}:${targetTime}`
-    // Logger.log(isKeyUnique(key))
     if (isKeyUnique(key)) {
+        if (indexTable.getLastRow() === MAX_API_RECORD) {
+            indexTable.deleteRow(firstIndexItemIdx)
+        }
         indexTable.appendRow([key, targetReward])
 
         let userIdx   = getOrInsertConditionFromRange(players, targetId, true) // find uid from players column range (left-most column)
