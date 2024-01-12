@@ -7,19 +7,15 @@ require('console-stamp')(console, {
     format: ':date(yyyy/mm/dd HH:MM:ss.l)' 
 });
 
-// !!!!! please update this configs before use
-var userConfig = {
-    // afreehp's donation page URL
-    "alertbox_url": "[아프리카 도우미 후원 위젯 URL]",
-    // google sheet's webapp endpoint URL
-    "webapp_url": "[구글 시트 웹앱 API URL]",
-}
-
 // runtime variables
 const portNumber = "13536"
 const afreehpDomain = "http://afreehp.kr"
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 
+// user configuration
+var userConfig = {}
+
+// transportation
 var xhr = new XMLHttpRequest()
 var isPosting = false
 
@@ -144,7 +140,7 @@ async function main() {
                 console.error("Get afreehp.idx parse failed.\n")
             }
         } else {
-            console.error("non-200 status code retrieved from alertbox_utl. statusCode=" + response.statusCode)
+            console.error("non-200 status code retrieved from alertbox_url. statusCode=" + response.statusCode)
         }
     } catch (err) {
         console.error("Error occured during afreehp.idx parsing. error=" + err.toString())
@@ -154,7 +150,12 @@ async function main() {
 }
 
 try {
-    main()
+    userConfig = require('./config.json')
+    if (userConfig.alertbox_url !== undefined || userConfig.webapp_url !== undefiend) {
+        main()
+    } else {
+        console.error("invalid user configuration. Make sure to populate all fields")
+    }
 } catch (err) {
     console.error("failed during main process. error=" + err)
 }

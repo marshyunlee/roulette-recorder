@@ -1,17 +1,23 @@
 {
-    "name": "roulette-recorder",
-    "version": "1.0.0",
-    "description": "",
-    "bin": {
-        "DonationAlertAPI": "./index.js"
-    },
-    "main": "index.js",
-    "author": "Marshall Lee",
-    "dependencies": {
-        "console-stamp": "^3.0.2",
-        "request": "^2.88.2",
-        "socket.io-client": "^2.3.1",
-        "websocket": "^1.0.34",
-        "xhr2": "^0.2.1"
-    }
+  "name": "roulette-recorder",
+  "version": "1.0.0",
+  "bin": {
+    "DonationAlertAPI": "index.js"
+  },
+  "main": "index.js",
+  "author": "Marshall Lee",
+  "dependencies": {
+    "console-stamp": "^3.0.2",
+    "request": "^2.88.2",
+    "socket.io-client": "^2.3.1",
+    "websocket": "^1.0.34",
+    "xhr2": "^0.2.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "description": ""
 }
