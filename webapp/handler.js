@@ -34,8 +34,8 @@ function doPost(e) {
         return // invalid request; do nothing
     }
 
-    let jsonString = e.postData.getDataAsString();
-    let jsonData = JSON.parse(jsonString);
+    let jsonString = e.postData.getDataAsString()
+    let jsonData = JSON.parse(jsonString)
     
     targetId = jsonData[paramKey_id]
     targetTime = jsonData[paramKey_time]

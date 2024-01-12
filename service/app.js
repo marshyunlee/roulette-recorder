@@ -3,6 +3,7 @@ const io = require("socket.io-client");
 const request = require('request');
 const requestPromise = util.promisify(request);
 const XMLHttpRequest = require('xhr2');
+const fs = require('fs/promises');
 require('console-stamp')(console, { 
     format: ':date(yyyy/mm/dd HH:MM:ss.l)' 
 });
@@ -119,11 +120,17 @@ function connectAfreehp() {
         socketAfreehp.connect()
     }, 1000)
 
+    // donation history fetch interval
     setInterval(() => {
         if (!isPosting) {
             socketAfreehp.emit("setupcmd", { type:"alertlist", sub:"load", idx:userConfig.idx, pageid:"0", subpage:"0" })
         }
     }, 10000)
+
+    // cache set clear interval
+    setInterval(() => {
+        keyCache.clear()
+    }, 600000)
 }
 
 
@@ -149,14 +156,19 @@ async function main() {
     connectAfreehp()
 }
 
-try {
-    userConfig = require('./config.json')
-    if (userConfig.alertbox_url !== undefined || userConfig.webapp_url !== undefiend) {
-        main()
-    } else {
-        console.error("invalid user configuration. Make sure to populate all fields")
-    }
-} catch (err) {
-    console.error("failed during main process. error=" + err)
-}
+fs.readFile("./config.json")
+    .then((data) => {
+        userConfig = JSON.parse(data)
+        if (userConfig.alertbox_url !== undefined || userConfig.webapp_url !== undefined) {
+            main()
+        } else {
+            console.error("invalid user configuration. Make sure to populate all fields")
+        }
+    })
+    .catch((error) => {
+        console.error("failed during main process. error=" + error)
+    });
 
+
+// open terminal for 1 min for logs
+sleep(60000)
