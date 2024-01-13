@@ -13,7 +13,7 @@
 
         <div class="field">
             <label class="label">현재 상태</label>
-            <span class="tag is-success" id="running_tag">작동중</span>
+            <span class="tag is-success" id="running_tag" style="display:none">작동중</span>
             <span class="tag is-danger" id="stopped_tag">정지됨</span>
         </div>
 
@@ -38,12 +38,15 @@
         <div class="container m-3">
             <button class="button is-primary is-fullwidth" id="start_button">시작</button>
         </div>
-        <div class="container m-3">
+        <!-- <div class="container m-3">
             <button class="button is-danger is-fullwidth" id="stop_button" style="disabled:true">정지</button>
+        </div> -->
+        <div class="container m-3">
+            <button class="button is-link is-fullwidth" id="log_button" style="disabled:true">로그 열기</button>
         </div>
     </div>
 </body>
 
-<script src="./scripts/index.js"></script>
-<script>var exports = {};</script>
+<script type="module" src="app.js"></script>
+<script type="module" src='index.js'></script>
 </html>

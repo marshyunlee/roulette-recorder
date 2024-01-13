@@ -1,14 +1,14 @@
-const util = require("util");
-const io = require("socket.io-client");
-const request = require('request');
-const requestPromise = util.promisify(request);
-const XMLHttpRequest = require('xhr2');
-const fs = require('fs/promises');
-require('console-stamp')(console, { 
-    format: ':date(yyyy/mm/dd HH:MM:ss.l)' 
-});
+const util = require("util")
+const io = require("socket.io-client")
+const request = require('request')
+const requestPromise = util.promisify(request)
+const XMLHttpRequest = require('xhr2')
+const fs = require('fs')
+const path = require('path')
+// require('console-stamp') (console, { format: ':date(yyyy/mm/dd HH:MM:ss.l)' })
 
 // runtime variables
+const logPath = path.join(process.resourcesPath, 'log.txt')
 const portNumber = "13536"
 const afreehpDomain = "http://afreehp.kr"
 const sleep = ms => new Promise(res => setTimeout(res, ms));
@@ -24,8 +24,13 @@ var isPosting = false
 // TODO - periodically clear the set to save mem... or is it even needed?
 var keyCache = new Set()
 
+// log streams
+var logStream = fs.createWriteStream(logPath, {flags: 'a'})
+const getTs = () => { return new Date().toLocaleString("ko-KR") }
+const logInfo = (content) => { logStream.write(`[${getTs()}] INFO: ${content}\n`) }
+const logError = (content) => { logStream.write(`[${getTs()}] ERROR: ${content}\n`) }
+
 // postData sends a request to the Google sheet webapp's post endpoint
-// param examples: [URL]?id=asdf&result=손편지
 // this helper assumes that the data is always valid -- validation must be done by the caller
 async function postData(data) {
     isPosting = true
@@ -50,7 +55,7 @@ async function postData(data) {
             }
             
             keyCache.add(key)
-            console.log(`시간: ${time} ::: ${uid} - ${result}`)
+            logInfo(`시간: ${time} ::: ${uid} - ${result}`)
             // send player uid and roulette result to Google sheet webapp's post API
             await xhr.open('POST', userConfig.webapp_url)
             xhr.setRequestHeader("Accept", "application/json")
@@ -71,7 +76,7 @@ async function postData(data) {
 // handle connection to afreehp donation page service
 function connectAfreehp() {
     if (userConfig.idx === undefined) {
-        console.log("Failed to locate afreehp.idx")
+        logError("Failed to locate afreehp.idx")
         return
     }   
 
@@ -84,12 +89,12 @@ function connectAfreehp() {
     })
 
     socketAfreehp.on("connect", () => {
-        console.log("Afreehp Connected")
+        logInfo("Afreehp Connected")
         socketAfreehp.emit("page", { idx: userConfig.idx })
     })
-    socketAfreehp.on("connect_error", (err) => console.error("SocketEvent: Afreehp connect_error: " + err))
-    socketAfreehp.on("close", () => console.log("SocketEvent: Afreehp close"))
-    socketAfreehp.on("error", () => console.error("SocketEvent: Afreehp error"))
+    socketAfreehp.on("connect_error", (err) => logError("SocketEvent: Afreehp connect_error: " + err))
+    socketAfreehp.on("close", () => logInfo("SocketEvent: Afreehp close"))
+    socketAfreehp.on("error", () => logError("SocketEvent: Afreehp error"))
     
     socketAfreehp.on("cmd", (data) => {
         try {
@@ -99,7 +104,7 @@ function connectAfreehp() {
                 postData(data.data)
             }
         } catch(err) {
-            console.error("Failed to parse a message from Afreehp page", err.toString())
+            logError("Failed to parse a message from Afreehp page", err.toString())
         }
     })
 
@@ -134,41 +139,40 @@ function connectAfreehp() {
 }
 
 
-async function main() {
-    console.log("Initializing afreehp donation page socket")
+async function initRecorder() {
+    logInfo("=========================================")
+    logInfo("Initializing afreehp donation page socket")
     try {
         let response = await requestPromise(userConfig.alertbox_url)
         if (response.statusCode == 200) {
             let idxMatch = response.body.match(/idx:\s*"([a-zA-Z0-9]+)",/)
             if (idxMatch !== null && idxMatch.length > 1) {
                 userConfig.idx = idxMatch[1]
-                console.log(`Successfully acquired afreehp.idx : ${userConfig.idx}\n`)
+                logInfo(`Successfully acquired afreehp.idx : ${userConfig.idx}`)
             } else {
-                console.error("Get afreehp.idx parse failed.\n")
+                logError("Get afreehp.idx parse failed.")
             }
         } else {
-            console.error("non-200 status code retrieved from alertbox_url. statusCode=" + response.statusCode)
+            logError("non-200 status code retrieved from alertbox_url. statusCode=" + response.statusCode)
         }
     } catch (err) {
-        console.error("Error occured during afreehp.idx parsing. error=" + err.toString())
+        logError("Error occured during afreehp.idx parsing. error=" + err.toString())
     }
 
     connectAfreehp()
 }
 
-fs.readFile("C:/config.json")
-    .then((data) => {
-        userConfig = JSON.parse(data)
-        if (userConfig.alertbox_url !== undefined || userConfig.webapp_url !== undefined) {
-            main()
-        } else {
-            console.error("invalid user configuration. Make sure to populate all fields")
-        }
-    })
-    .catch((error) => {
-        console.error("failed during main process. error=" + error)
-    });
+// this function always assumes that the parameters are valid URL
+// the frontend caller MUST validate before calling
+async function startRouletteRecorder(afreehpUrl, webappUrl) {
+    userConfig.alertbox_url = afreehpUrl
+    userConfig.webapp_url = webappUrl
+    try {
+        initRecorder()
+    } catch (err) {
+        logError(`init error: ${err}`)
+        return false
+    }
+}
 
-
-// open terminal for 1 min for logs
-sleep(60000)
+module.exports = { startRouletteRecorder }
