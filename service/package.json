@@ -1,11 +1,8 @@
 {
   "name": "roulette-recorder",
   "version": "1.0.0",
-  "bin": {
-    "DonationAlertAPI": "index.js"
-  },
-  "main": "index.js",
   "author": "Marshall Lee",
+  "main": "main.js",
   "dependencies": {
     "console-stamp": "^3.0.2",
     "request": "^2.88.2",
@@ -15,7 +12,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron ."
   },
   "keywords": [],
   "license": "ISC",
