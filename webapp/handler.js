@@ -1,13 +1,16 @@
 // table name that is found at the left bottom of the actual sheet.
-const tableName = "대시보드"
-const indexTableName = "기록"
-const MAX_API_RECORD = 999
+const tableName = "대시보드" // name of the record sheet
+const topMargin = 2 // number of the title row overheads
+const leftMargin = 2 // number of the left column overheads
 
-const topMargin = 2
-const leftMargin = 1
-const firstIndexItemIdx = 3
+const indexTableName = "기록" // name of the history sheet
+const firstHistoryItemIdx = 3 // first item index
+const MAX_API_RECORD = 300 // maximum records to keep in the sheet
 
+
+// ========== runtime ==========
 const paramKey_id = "id"
+const paramKey_nickname = "nickname"
 const paramKey_time = "time"
 const paramKey_reward = "result"
 
@@ -17,119 +20,136 @@ const indexTable = ss.getSheetByName(indexTableName)
 
 // TODO - beware of the hardcoded cell location. Make dynamic or create sheet template
 // probably better to use stream iteration? idk
-const players = sheet.getRange("A3:A")
-const rewards = sheet.getRange("B2:Z2")
-const indexRange = indexTable.getRange("A3:A")
+let topMarginNum = topMargin+1
+Logger.log("A" + topMarginNum + ":A")
+Logger.log("B" + leftMargin + ":Z" + leftMargin)
+const players = sheet.getRange("A" + topMarginNum + ":A")
+const rewards = sheet.getRange("C" + leftMargin + ":Z" + leftMargin)
+const indexRange = indexTable.getRange("A" + firstHistoryItemIdx + ":A")
 
 /*
 - Google Sheet webapp's post request handler
 - This does not return anything to the client
 - example request body schema:
 {
-    "id": "afreehp",
-    "time": 123123123,
-    "result": "3분 asmr"
+  "id": "afreehp",
+  "nickname": "아프리카도우미",
+  "time": 123123123,
+  "result": "공포게임"
 }
 */
 function doPost(e) {
-    // Logger.log("recordRoulette is called: " + e)
-    if (e === undefined || e === null || e.postData === undefined || e.postData === null) {
-        return // invalid request; do nothing
+  let lock = LockService.getPublicLock()
+  lock.waitLock(600000) // standby up to 10 min
+  // Logger.log("recordRoulette is called: " + e)
+  
+  if (e === undefined || e === null || e.postData === undefined || e.postData === null) {
+      return // invalid request; do nothing
+  }
+
+  let jsonString = e.postData.getDataAsString();
+  let jsonData = JSON.parse(jsonString);
+  
+  targetId = jsonData[paramKey_id]
+  targetNickname = jsonData[paramKey_nickname]
+  targetTime = jsonData[paramKey_time]
+  targetReward = jsonData[paramKey_reward]
+  
+  // targetId = "afreehp"
+  // targetNickname = "아프리카도우미"
+  // targetTime = "1705811505437"
+  // targetReward = "공포게임"
+  Logger.log("userID: " + targetId + ":" + targetTime + " -> " + targetNickname + " won " + targetReward)
+
+  // indexTable check
+  let key = `${targetId}:${targetTime}`
+  if (isKeyUnique(key)) {
+    if (indexTable.getLastRow() >= MAX_API_RECORD) {
+      indexTable.deleteRow(firstHistoryItemIdx)
+    }
+    indexTable.appendRow([key, targetNickname, targetReward, new Date(Number(targetTime)).toLocaleString("ko-KR")])
+
+    let userIdx   = getOrInsertConditionFromRange(players, targetId, true, targetNickname) // find uid from players column range
+    let rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false) // find reward from rewards row range (top-most row)
+
+    // boundary check
+    if (userIdx < topMargin || rewardIdx < leftMargin) {
+      return
     }
 
-    let jsonString = e.postData.getDataAsString();
-    let jsonData = JSON.parse(jsonString);
-    
-    targetId = jsonData[paramKey_id]
-    targetTime = jsonData[paramKey_time]
-    targetReward = jsonData[paramKey_reward]
-    
-    // targetId = "afreehp"
-    // targetTime = "2112"
-    // targetReward = "방셀"
-    // Logger.log("incrementing userID: " + targetId + ":" + targetTime + " for reward: " + targetReward)
-
-    // indexTable check
-    let key = `${targetId}:${targetTime}`
-    if (isKeyUnique(key)) {
-        if (indexTable.getLastRow() === MAX_API_RECORD) {
-            indexTable.deleteRow(firstIndexItemIdx)
-        }
-        indexTable.appendRow([key, targetReward])
-
-        let userIdx   = getOrInsertConditionFromRange(players, targetId, true) // find uid from players column range (left-most column)
-        let rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false) // find reward from rewards row range (top-most row)
-
-        // boundary check
-        if (userIdx < topMargin || rewardIdx < leftMargin) {
-            return
-        }
-
-        // update the target cell
-        // Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
-        let targetCell = sheet.getRange(userIdx, rewardIdx)
-        let currVal = targetCell.getValue()
-        if (typeof(currVal) === "number") {
-            targetCell.setValue(currVal + 1)
-        } else {
-            targetCell.setValue(1)
-        }
+    // update the target cell
+    Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
+    let targetCell = sheet.getRange(userIdx, rewardIdx)
+    let currVal = targetCell.getValue()
+    if (typeof(currVal) === "number") {
+      targetCell.setValue(currVal + 1)
+    } else {
+      targetCell.setValue(1)
     }
+  }
+
+  lock.releaseLock()
 }
 
 function isKeyUnique(key) {
-    let idxs = indexRange.getValues()
-    idxs = idxs.filter(e => e[0])
+  let idxs = indexRange.getValues()
+  idxs = idxs.filter(e => e[0])
 
-    for (let i = 0; i < idxs.length; i++) {
-        let curr = idxs[i][0]
-        if (curr === "" || curr === key) {
-            return false
-        }
+  for (let i = 0; i < idxs.length; i++) {
+    let curr = idxs[i][0]
+    if (curr === "" || curr === key) {
+      return false
     }
-    return true
+  }
+  return true
 }
 
 // returns the index number of the FIRST condition found in the single-lined range
 // if not found, insert the condition to the first available row (i.e., to the first empty cell)
-function getOrInsertConditionFromRange(targetRange, condition, isRangeColumn) {
-    if (!condition || typeof(condition) !== "string" || condition === "") {
-        return 0
+function getOrInsertConditionFromRange(targetRange, condition, isUserSearch, targetNickname) {
+  if (!condition || typeof(condition) !== "string" || condition === "") {
+    return 0
+  }
+
+  let values = isUserSearch ? targetRange.getValues() : targetRange.getValues()[0]
+  let margin = isUserSearch ? topMargin : leftMargin
+
+  // iterative search for the condition as substring
+  let idx = 0
+  let emptySlot = 0
+  let isFound = false
+  for (let i = 0; i < values.length; i++) {
+    idx++ // increment regardless
+    if (values[i] === undefined || values[i] === null) {
+      // invalid condition; skip
+      continue
     }
 
-    let values = isRangeColumn ? targetRange.getValues() : targetRange.getValues()[0]
-    let margin = isRangeColumn ? topMargin : leftMargin
-
-    // iterative search for the condition as substring
-    let idx = 0
-    let emptySlot = 0
-    let isFound = false
-    for (let i = 0; i < values.length; i++) {
-        idx++ // increment regardless
-        if (values[i] === undefined || values[i] === null) {
-            // invalid condition; skip
-            continue
-        }
-
-        let targetVal = isRangeColumn && values[i].length !== 0 ? values[i].shift() : values[i]
-        if (typeof(targetVal) === "string" && targetVal.includes(condition)) {
-            isFound = true
-            break
-        } else if (targetVal === "" && emptySlot === 0) {
-            emptySlot = idx
-        }
+    let targetVal = isUserSearch && values[i].length !== 0 ? values[i].shift() : values[i]
+    if (typeof(targetVal) === "string" && targetVal.includes(condition)) {
+      isFound = true
+      break
+    } else if (targetVal === "" && emptySlot === 0) {
+      emptySlot = idx
     }
+  }
 
-    // return the idx ONLY if found; otherwise return the new inserted val
-    if (isFound) {
-        return (idx + margin)
-    } else {
-        // insert the user to the first empty row
-        emptySlot += margin
-        let cellToInsert = isRangeColumn ? sheet.getRange(emptySlot, leftMargin) : sheet.getRange(topMargin, emptySlot)
-        cellToInsert.setValue(condition)
-        return emptySlot
+  // return the idx ONLY if found; otherwise return the new inserted val
+  if (isFound) {
+    if (isUserSearch && targetNickname !== null) {
+      sheet.getRange(idx, leftMargin).setValue(targetNickname)
     }
+    return (idx + margin)
+  } else {
+    // insert the user to the first empty row
+    emptySlot += margin
+    let cellToInsert = isUserSearch ? sheet.getRange(emptySlot, 1) : sheet.getRange(topMargin, emptySlot)
+    cellToInsert.setValue(condition)
+    if (isUserSearch && targetNickname !== null) {
+      sheet.getRange(emptySlot, leftMargin).setValue(targetNickname)
+    }
+    return emptySlot
+  }
 
-    // not reachable
+  // not reachable
 }

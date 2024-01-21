@@ -19,6 +19,7 @@ var userConfig = {}
 // transportation
 var xhr = new XMLHttpRequest()
 var isPosting = false
+await xhr.open('POST', userConfig.webapp_url)
 
 // just keep the keys to save API calls
 // TODO - periodically clear the set to save mem... or is it even needed?
@@ -37,16 +38,18 @@ async function postData(data) {
     
     for (let i = 0; i < data.length; i++) {
         let curr = data[i]
-        
+
         // skip if current is not roulette data
-        if (curr.roulettedata !== undefined &&
+        if (
+            curr.roulettedata !== undefined &&
             curr.roulettedata.list !== undefined &&
-            curr.roulettedata.result <= curr.roulettedata.list.length - 1)
-            {
-            
+            curr.roulettedata.result <= curr.roulettedata.list.length - 1
+            ) {
+
             const uid = curr.id
             const result = curr.roulettedata.list[curr.roulettedata.result]
-            const time = curr.time            
+            const time = curr.time
+            const nickname = curr.name
 
             // cache check
             const key = `${uid}:${time}`
@@ -57,17 +60,17 @@ async function postData(data) {
             keyCache.add(key)
             logInfo(`시간: ${time} ::: ${uid} - ${result}`)
             // send player uid and roulette result to Google sheet webapp's post API
-            await xhr.open('POST', userConfig.webapp_url)
             xhr.setRequestHeader("Accept", "application/json")
             xhr.setRequestHeader("Content-Type", "application/json")
             let body =
             `{
                 "id": "${uid}",
+                "nickname": "${nickname}",
                 "time": "${time}",
                 "result": "${result}"
             }`
             await xhr.send(body)
-            await sleep(2000)
+            await sleep(500)
         }
     }
     isPosting = false
@@ -78,7 +81,7 @@ function connectAfreehp() {
     if (userConfig.idx === undefined) {
         logError("Failed to locate afreehp.idx")
         return
-    }   
+    }
 
     const afreehpURL = afreehpDomain + ":" + portNumber
     const socketAfreehp = io(afreehpURL, {
@@ -95,7 +98,7 @@ function connectAfreehp() {
     socketAfreehp.on("connect_error", (err) => logError("SocketEvent: Afreehp connect_error: " + err))
     socketAfreehp.on("close", () => logInfo("SocketEvent: Afreehp close"))
     socketAfreehp.on("error", () => logError("SocketEvent: Afreehp error"))
-    
+
     socketAfreehp.on("cmd", (data) => {
         try {
             // alertlist check
@@ -130,12 +133,12 @@ function connectAfreehp() {
         if (!isPosting) {
             socketAfreehp.emit("setupcmd", { type:"alertlist", sub:"load", idx:userConfig.idx, pageid:"0", subpage:"0" })
         }
-    }, 10000)
+    }, 5000)
 
     // cache set clear interval
     setInterval(() => {
         keyCache.clear()
-    }, 600000)
+    }, 360000)
 }
 
 
