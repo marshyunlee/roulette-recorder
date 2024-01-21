@@ -19,7 +19,6 @@ var userConfig = {}
 // transportation
 var xhr = new XMLHttpRequest()
 var isPosting = false
-await xhr.open('POST', userConfig.webapp_url)
 
 // just keep the keys to save API calls
 // TODO - periodically clear the set to save mem... or is it even needed?
@@ -60,6 +59,7 @@ async function postData(data) {
             keyCache.add(key)
             logInfo(`시간: ${time} ::: ${uid} - ${result}`)
             // send player uid and roulette result to Google sheet webapp's post API
+            await xhr.open('POST', userConfig.webapp_url)
             xhr.setRequestHeader("Accept", "application/json")
             xhr.setRequestHeader("Content-Type", "application/json")
             let body =
