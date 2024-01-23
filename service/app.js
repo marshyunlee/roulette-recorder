@@ -70,7 +70,7 @@ async function postData(data) {
                 "result": "${result}"
             }`
             await xhr.send(body)
-            await sleep(500)
+            await sleep(100)
         }
     }
     isPosting = false
