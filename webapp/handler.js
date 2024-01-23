@@ -21,8 +21,6 @@ const indexTable = ss.getSheetByName(indexTableName)
 // TODO - beware of the hardcoded cell location. Make dynamic or create sheet template
 // probably better to use stream iteration? idk
 let topMarginNum = topMargin+1
-Logger.log("A" + topMarginNum + ":A")
-Logger.log("B" + leftMargin + ":Z" + leftMargin)
 const players = sheet.getRange("A" + topMarginNum + ":A")
 const rewards = sheet.getRange("C" + leftMargin + ":Z" + leftMargin)
 const indexRange = indexTable.getRange("A" + firstHistoryItemIdx + ":A")
@@ -41,7 +39,7 @@ const indexRange = indexTable.getRange("A" + firstHistoryItemIdx + ":A")
 function doPost(e) {
   let lock = LockService.getPublicLock()
   lock.waitLock(600000) // standby up to 10 min
-  // Logger.log("recordRoulette is called: " + e)
+  Logger.log("recordRoulette is called: " + e)
   
   if (e === undefined || e === null || e.postData === undefined || e.postData === null) {
       return // invalid request; do nothing
@@ -54,20 +52,21 @@ function doPost(e) {
   targetNickname = jsonData[paramKey_nickname]
   targetTime = jsonData[paramKey_time]
   targetReward = jsonData[paramKey_reward]
-  
+
   // targetId = "afreehp"
   // targetNickname = "아프리카도우미"
-  // targetTime = "1705811505437"
-  // targetReward = "공포게임"
+  // targetTime = "1705823706751"
+  // targetReward = "test"
   Logger.log("userID: " + targetId + ":" + targetTime + " -> " + targetNickname + " won " + targetReward)
 
   // indexTable check
   let key = `${targetId}:${targetTime}`
   if (isKeyUnique(key)) {
     if (indexTable.getLastRow() >= MAX_API_RECORD) {
-      indexTable.deleteRow(firstHistoryItemIdx)
+      indexTable.deleteRow(MAX_API_RECORD)
     }
-    indexTable.appendRow([key, targetNickname, targetReward, new Date(Number(targetTime)).toLocaleString("ko-KR")])
+    indexTable.insertRowBefore(firstHistoryItemIdx)
+    indexTable.getRange(firstHistoryItemIdx, 1, 1, 4).setValues([[key, targetNickname, targetReward, new Date(Number(targetTime)).toLocaleString("ko-KR")]])
 
     let userIdx   = getOrInsertConditionFromRange(players, targetId, true, targetNickname) // find uid from players column range
     let rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false) // find reward from rewards row range (top-most row)
@@ -136,16 +135,19 @@ function getOrInsertConditionFromRange(targetRange, condition, isUserSearch, tar
 
   // return the idx ONLY if found; otherwise return the new inserted val
   if (isFound) {
+    idx += margin
     if (isUserSearch && targetNickname !== null) {
+      Logger.log("inserting nickname to:" + idx + " : " + leftMargin)
       sheet.getRange(idx, leftMargin).setValue(targetNickname)
     }
-    return (idx + margin)
+    return idx
   } else {
     // insert the user to the first empty row
     emptySlot += margin
     let cellToInsert = isUserSearch ? sheet.getRange(emptySlot, 1) : sheet.getRange(topMargin, emptySlot)
     cellToInsert.setValue(condition)
     if (isUserSearch && targetNickname !== null) {
+      Logger.log("inserting nickname to:" + emptySlot + " : " + leftMargin)
       sheet.getRange(emptySlot, leftMargin).setValue(targetNickname)
     }
     return emptySlot
