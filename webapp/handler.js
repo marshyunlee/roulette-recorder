@@ -125,7 +125,10 @@ function getOrInsertConditionFromRange(targetRange, condition, isUserSearch, tar
     }
 
     let targetVal = isUserSearch && values[i].length !== 0 ? values[i].shift() : values[i]
-    if (typeof(targetVal) === "string" && targetVal.includes(condition)) {
+    if (
+        (typeof(targetVal) === "string" && targetVal.includes(condition)) ||
+        (typeof(targetVal) === "number" && targetVal.toString().includes(condition))
+      ) {
       isFound = true
       break
     } else if (targetVal === "" && emptySlot === 0) {
