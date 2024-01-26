@@ -2,22 +2,9 @@
 
 ![flowchart](image.png)
 
-
-# SETUP - Windows 11
-- copy `./service/config.json` to `C:/` and update with your own URLs
-- copy `./service/app.exe` to `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp`
-
 # Project TODO
 - Well, this is just an overnight toy project. No roadmap/timeline ATM.
 - Other than FreecShot reimplementation (#1), most of the TODOs are for initial setup automation or usability improvements.
-
-wanted to replace the service with Chrome extension; but the review process will take forever + accessing js variables from contentscript scope will probably require a good reasoning to Google to pass the review.   pending -- checkout ./chrome_extension directory     
-You may find some useful docs for NodeJS + Chrome extension development here:
-- https://stackoverflow.com/questions/3955803/chrome-extension-get-page-variables-in-content-script
-- https://stackoverflow.com/questions/46460962/how-to-get-input-value-in-chrome-extension
-- https://zuminternet.github.io/Zum-Chrome-Extension/
-- https://velog.io/@wisdom_lee/%ED%81%AC%EB%A1%AC-%ED%99%95%EC%9E%A5-%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8Chrome-extension-%EA%B0%9C%EB%B0%9C-%EA%B0%80%EC%9D%B4%EB%93%9C
-
 
 2. [P0] Someone may takeover the project to transplant the data crawling part into FreecShot platform
     1. AfreecaTV FreecShot: https://bj.afreecatv.com/afstudio/posts/50746022

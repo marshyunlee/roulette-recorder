@@ -17,8 +17,13 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
 var userConfig = {}
 
 // transportation
-var xhr = new XMLHttpRequest()
 var isPosting = false
+var xhr = new XMLHttpRequest()
+// TODO - error check + fallback
+xhr.addEventListener("loadend", (res) => {
+    logInfo("google sheet operation's completed")
+    isPosting = false
+}, false)
 
 // just keep the keys to save API calls
 // TODO - periodically clear the set to save mem... or is it even needed?
@@ -34,7 +39,10 @@ const logError = (content) => { logStream.write(`[${getTs()}] ERROR: ${content}\
 // this helper assumes that the data is always valid -- validation must be done by the caller
 async function postData(data) {
     isPosting = true
-    
+    let body = {
+        records: []
+    }
+
     for (let i = 0; i < data.length; i++) {
         let curr = data[i]
 
@@ -55,25 +63,30 @@ async function postData(data) {
             if (keyCache.has(key)) {
                 continue
             }
-            
+
             keyCache.add(key)
             logInfo(`시간: ${time} ::: ${uid} - ${result}`)
-            // send player uid and roulette result to Google sheet webapp's post API
-            await xhr.open('POST', userConfig.webapp_url)
-            xhr.setRequestHeader("Accept", "application/json")
-            xhr.setRequestHeader("Content-Type", "application/json")
-            let body =
-            `{
-                "id": "${uid}",
-                "nickname": "${nickname}",
-                "time": "${time}",
-                "result": "${result}"
-            }`
-            await xhr.send(body)
-            await sleep(10)
+
+            body.records.push(
+            {
+                id: uid,
+                nickname: nickname,
+                time: time,
+                result: result
+            })
         }
     }
-    isPosting = false
+
+    // send player uid and roulette result to Google sheet webapp's post API
+    if (body.records !== null && body.records.length > 0) {
+        await xhr.open('POST', userConfig.webapp_url)
+        xhr.setRequestHeader("Accept", "application/json")
+        xhr.setRequestHeader("Content-Type", "application/json")
+        await xhr.send(JSON.stringify(body))
+    }
+
+    // what if API fails and never sends any request?
+    // isPosting = false
 }
 
 // handle connection to afreehp donation page service
@@ -117,7 +130,7 @@ function connectAfreehp() {
     //     onEvent.call(socketAfreehp, packet)
     //     packet.data = ["*"].concat(packet.data || [])
     //     onEvent.call(socketAfreehp, packet)
-    // }    
+    // }
     // // all events
     // socketAfreehp.on("*", (event, data) => {
     //     console.log(">>>>> listening to an wildcard event: " + event)
@@ -138,7 +151,7 @@ function connectAfreehp() {
     // cache set clear interval
     setInterval(() => {
         keyCache.clear()
-    }, 360000)
+    }, 21600000)
 }
 
 
