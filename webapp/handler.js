@@ -38,8 +38,9 @@ const indexRange = indexTable.getRange("A" + firstHistoryItemIdx + ":A")
 */
 function doPost(e) {
   let lock = LockService.getPublicLock()
-  lock.waitLock(600000) // standby up to 10 min
+  lock.waitLock(300000) // standby up to 5 min
   Logger.log("recordRoulette is called: " + e)
+  console.log("recordRoulette is called: " + e)
   
   if (e === undefined || e === null || e.postData === undefined || e.postData === null) {
       return // invalid request; do nothing
@@ -47,47 +48,50 @@ function doPost(e) {
 
   let jsonString = e.postData.getDataAsString();
   let jsonData = JSON.parse(jsonString);
-  
-  targetId = jsonData[paramKey_id]
-  targetNickname = jsonData[paramKey_nickname]
-  targetTime = jsonData[paramKey_time]
-  targetReward = jsonData[paramKey_reward]
 
-  // targetId = "afreehp"
-  // targetNickname = "아프리카도우미"
-  // targetTime = "1705823706751"
-  // targetReward = "test"
-  Logger.log("userID: " + targetId + ":" + targetTime + " -> " + targetNickname + " won " + targetReward)
+  if (jsonData !== null && jsonData.records !== null && jsonData.records.length > 0) {
+    jsonData.records.forEach((record) => {
+      targetId = record[paramKey_id]
+      targetNickname = record[paramKey_nickname]
+      targetTime = record[paramKey_time]
+      targetReward = record[paramKey_reward]
+      Logger.log("userID: " + targetId + ":" + targetTime + " -> " + targetNickname + " won " + targetReward)
 
-  // indexTable check
-  let key = `${targetId}:${targetTime}`
-  if (isKeyUnique(key)) {
-    if (indexTable.getLastRow() >= MAX_API_RECORD) {
-      indexTable.deleteRow(MAX_API_RECORD)
-    }
-    indexTable.insertRowBefore(firstHistoryItemIdx)
-    indexTable.getRange(firstHistoryItemIdx, 1, 1, 4).setValues([[key, targetNickname, targetReward, new Date(Number(targetTime)).toLocaleString("ko-KR")]])
+      // indexTable check
+      let key = `${targetId}:${targetTime}`
+      if (isKeyUnique(key)) {
+        if (indexTable.getLastRow() >= MAX_API_RECORD) {
+          indexTable.deleteRow(MAX_API_RECORD)
+        }
+        indexTable.insertRowBefore(firstHistoryItemIdx)
+        indexTable.getRange(firstHistoryItemIdx, 1, 1, 4).setValues([[key, targetNickname, targetReward, new Date(Number(targetTime)).toLocaleString("ko-KR")]])
 
-    let userIdx   = getOrInsertConditionFromRange(players, targetId, true, targetNickname) // find uid from players column range
-    let rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false) // find reward from rewards row range (top-most row)
+        let userIdx   = getOrInsertConditionFromRange(players, targetId, true, targetNickname) // find uid from players column range
+        let rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false) // find reward from rewards row range (top-most row)
 
-    // boundary check
-    if (userIdx < topMargin || rewardIdx < leftMargin) {
-      return
-    }
+        // boundary check
+        if (userIdx < topMargin || rewardIdx < leftMargin) {
+          return
+        }
 
-    // update the target cell
-    Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
-    let targetCell = sheet.getRange(userIdx, rewardIdx)
-    let currVal = targetCell.getValue()
-    if (typeof(currVal) === "number") {
-      targetCell.setValue(currVal + 1)
-    } else {
-      targetCell.setValue(1)
-    }
+        // update the target cell
+        Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
+        let targetCell = sheet.getRange(userIdx, rewardIdx)
+        let currVal = targetCell.getValue()
+        if (typeof(currVal) === "number") {
+          targetCell.setValue(currVal + 1)
+        } else {
+          targetCell.setValue(1)
+        }
+      }
+    })
   }
 
   lock.releaseLock()
+  
+  // send response to notify the client upon completion
+  // TODO - return failure status for retry
+  return ContentService.createTextOutput('')
 }
 
 function isKeyUnique(key) {
