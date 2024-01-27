@@ -80,6 +80,7 @@ function doPost(e) {
         } else {
           targetCell.setValue(1)
         }
+        SpreadsheetApp.flush()
         cellLock.releaseLock()
       }
     })
