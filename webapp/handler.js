@@ -37,14 +37,12 @@ const indexRange = indexTable.getRange("A" + firstHistoryItemIdx + ":A")
 }
 */
 function doPost(e) {
-  let lock = LockService.getPublicLock()
-  lock.waitLock(300000) // standby up to 5 min
-  Logger.log("recordRoulette is called: " + e)
-  console.log("recordRoulette is called: " + e)
-  
+  // Logger.log("recordRoulette is called: " + e)
   if (e === undefined || e === null || e.postData === undefined || e.postData === null) {
       return // invalid request; do nothing
   }
+
+  let cellLock = LockService.getScriptLock()
 
   let jsonString = e.postData.getDataAsString();
   let jsonData = JSON.parse(jsonString);
@@ -55,16 +53,15 @@ function doPost(e) {
       targetNickname = record[paramKey_nickname]
       targetTime = record[paramKey_time]
       targetReward = record[paramKey_reward]
-      Logger.log("userID: " + targetId + ":" + targetTime + " -> " + targetNickname + " won " + targetReward)
+      // Logger.log("userID: " + targetId + ":" + targetTime + " -> " + targetNickname + " won " + targetReward)
 
       // indexTable check
       let key = `${targetId}:${targetTime}`
       if (isKeyUnique(key)) {
         if (indexTable.getLastRow() >= MAX_API_RECORD) {
-          indexTable.deleteRow(MAX_API_RECORD)
+          indexTable.deleteRows(firstHistoryItemIdx, indexTable.getLastRow() - MAX_API_RECORD + 1)
         }
-        indexTable.insertRowBefore(firstHistoryItemIdx)
-        indexTable.getRange(firstHistoryItemIdx, 1, 1, 4).setValues([[key, targetNickname, targetReward, new Date(Number(targetTime)).toLocaleString("ko-KR")]])
+        indexTable.appendRow([key, targetNickname, targetReward, new Date(Number(targetTime)).toLocaleString("ko-KR")])
 
         let userIdx   = getOrInsertConditionFromRange(players, targetId, true, targetNickname) // find uid from players column range
         let rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false) // find reward from rewards row range (top-most row)
@@ -73,9 +70,9 @@ function doPost(e) {
         if (userIdx < topMargin || rewardIdx < leftMargin) {
           return
         }
-
         // update the target cell
-        Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
+        // Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
+        cellLock.waitLock(600000)
         let targetCell = sheet.getRange(userIdx, rewardIdx)
         let currVal = targetCell.getValue()
         if (typeof(currVal) === "number") {
@@ -83,11 +80,10 @@ function doPost(e) {
         } else {
           targetCell.setValue(1)
         }
+        cellLock.releaseLock()
       }
     })
   }
-
-  lock.releaseLock()
   
   // send response to notify the client upon completion
   // TODO - return failure status for retry
@@ -144,7 +140,7 @@ function getOrInsertConditionFromRange(targetRange, condition, isUserSearch, tar
   if (isFound) {
     idx += margin
     if (isUserSearch && targetNickname !== null) {
-      Logger.log("inserting nickname to:" + idx + " : " + leftMargin)
+      // Logger.log("inserting nickname to:" + idx + " : " + leftMargin)
       sheet.getRange(idx, leftMargin).setValue(targetNickname)
     }
     return idx
@@ -154,7 +150,7 @@ function getOrInsertConditionFromRange(targetRange, condition, isUserSearch, tar
     let cellToInsert = isUserSearch ? sheet.getRange(emptySlot, 1) : sheet.getRange(topMargin, emptySlot)
     cellToInsert.setValue(condition)
     if (isUserSearch && targetNickname !== null) {
-      Logger.log("inserting nickname to:" + emptySlot + " : " + leftMargin)
+      // Logger.log("inserting nickname to:" + emptySlot + " : " + leftMargin)
       sheet.getRange(emptySlot, leftMargin).setValue(targetNickname)
     }
     return emptySlot

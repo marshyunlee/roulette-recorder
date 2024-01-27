@@ -17,13 +17,7 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
 var userConfig = {}
 
 // transportation
-var isPosting = false
 var xhr = new XMLHttpRequest()
-// TODO - error check + fallback
-xhr.addEventListener("loadend", (res) => {
-    logInfo("google sheet operation's completed")
-    isPosting = false
-}, false)
 
 // just keep the keys to save API calls
 // TODO - periodically clear the set to save mem... or is it even needed?
@@ -38,7 +32,6 @@ const logError = (content) => { logStream.write(`[${getTs()}] ERROR: ${content}\
 // postData sends a request to the Google sheet webapp's post endpoint
 // this helper assumes that the data is always valid -- validation must be done by the caller
 async function postData(data) {
-    isPosting = true
     let body = {
         records: []
     }
@@ -84,9 +77,6 @@ async function postData(data) {
         xhr.setRequestHeader("Content-Type", "application/json")
         await xhr.send(JSON.stringify(body))
     }
-
-    // what if API fails and never sends any request?
-    // isPosting = false
 }
 
 // handle connection to afreehp donation page service
@@ -139,13 +129,11 @@ function connectAfreehp() {
 
     setTimeout(() => {
         socketAfreehp.connect()
-    }, 1000)
+    }, 5000)
 
     // donation history fetch interval
     setInterval(() => {
-        if (!isPosting) {
-            socketAfreehp.emit("setupcmd", { type:"alertlist", sub:"load", idx:userConfig.idx, pageid:"0", subpage:"0" })
-        }
+        socketAfreehp.emit("setupcmd", { type:"alertlist", sub:"load", idx:userConfig.idx, pageid:"0", subpage:"0" })
     }, 5000)
 
     // cache set clear interval

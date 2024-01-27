@@ -7,12 +7,12 @@ const singleInstanceLock = app.requestSingleInstanceLock()
 const userData = JSON.stringify()
 function createWindow () {
     mainWindow = new BrowserWindow({
-        width: 400,
-        minWidth: 400,
-        maxWidth: 400,
-        height: 500,
-        minHeight: 500,
-        maxHeight: 500,
+        width: 480,
+        minWidth: 480,
+        maxWidth: 480,
+        height: 550,
+        minHeight: 550,
+        maxHeight: 550,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
