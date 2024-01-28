@@ -20,7 +20,6 @@ var userConfig = {}
 var xhr = new XMLHttpRequest()
 
 // just keep the keys to save API calls
-// TODO - periodically clear the set to save mem... or is it even needed?
 var keyCache = new Set()
 
 // log streams

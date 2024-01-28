@@ -6,6 +6,7 @@ const leftMargin = 2 // number of the left column overheads
 const indexTableName = "기록" // name of the history sheet
 const firstHistoryItemIdx = 3 // first item index
 const MAX_API_RECORD = 300 // maximum records to keep in the sheet
+const BATCH_SIZE = 10
 
 
 // ========== runtime ==========
@@ -19,11 +20,12 @@ const sheet = ss.getSheetByName(tableName)
 const indexTable = ss.getSheetByName(indexTableName)
 
 // TODO - beware of the hardcoded cell location. Make dynamic or create sheet template
-// probably better to use stream iteration? idk
 let topMarginNum = topMargin+1
 const players = sheet.getRange("A" + topMarginNum + ":A")
 const rewards = sheet.getRange("C" + leftMargin + ":Z" + leftMargin)
 const indexRange = indexTable.getRange("A" + firstHistoryItemIdx + ":A")
+
+let updateLock = LockService.getScriptLock()
 
 /*
 - Google Sheet webapp's post request handler
@@ -42,47 +44,54 @@ function doPost(e) {
       return // invalid request; do nothing
   }
 
-  let cellLock = LockService.getScriptLock()
-
   let jsonString = e.postData.getDataAsString();
   let jsonData = JSON.parse(jsonString);
 
   if (jsonData !== null && jsonData.records !== null && jsonData.records.length > 0) {
-    jsonData.records.forEach((record) => {
-      targetId = record[paramKey_id]
-      targetNickname = record[paramKey_nickname]
-      targetTime = record[paramKey_time]
-      targetReward = record[paramKey_reward]
-      // Logger.log("userID: " + targetId + ":" + targetTime + " -> " + targetNickname + " won " + targetReward)
+    // small batch handlings due to lockings and process time
+    smallBatch = []
+    for (let i = 0; i < jsonData.records.length; i += BATCH_SIZE) {
+      smallBatch.push(jsonData.records.slice(i, i+BATCH_SIZE))
+    }
 
-      // indexTable check
-      let key = `${targetId}:${targetTime}`
-      if (isKeyUnique(key)) {
-        if (indexTable.getLastRow() >= MAX_API_RECORD) {
-          indexTable.deleteRows(firstHistoryItemIdx, indexTable.getLastRow() - MAX_API_RECORD + 1)
-        }
-        indexTable.appendRow([key, targetNickname, targetReward, new Date(Number(targetTime)).toLocaleString("ko-KR")])
+    smallBatch.forEach((records) => {
+      updateLock.tryLock(600000)
+      records.forEach((record) => {
+        targetId = record[paramKey_id]
+        targetNickname = record[paramKey_nickname]
+        targetTime = record[paramKey_time]
+        targetReward = record[paramKey_reward]
+        // Logger.log("userID: " + targetId + ":" + targetTime + " -> " + targetNickname + " won " + targetReward)
 
-        let userIdx   = getOrInsertConditionFromRange(players, targetId, true, targetNickname) // find uid from players column range
-        let rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false) // find reward from rewards row range (top-most row)
+        // indexTable check
+        let key = `${targetId}:${targetTime}`
+        if (isKeyUnique(key)) {
+          if (indexTable.getLastRow() >= MAX_API_RECORD) {
+            indexTable.deleteRows(firstHistoryItemIdx, indexTable.getLastRow() - MAX_API_RECORD + 1)
+          }
+          indexTable.appendRow([key, targetNickname, targetReward, new Date(Number(targetTime)).toLocaleString("ko-KR")])
 
-        // boundary check
-        if (userIdx < topMargin || rewardIdx < leftMargin) {
-          return
+          let userIdx   = getOrInsertConditionFromRange(players, targetId, true, targetNickname)
+          let rewardIdx = getOrInsertConditionFromRange(rewards, targetReward, false)
+
+          // boundary check
+          if (userIdx < topMargin || rewardIdx < leftMargin) {
+            return
+          }
+
+          // update the target cell
+          // Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
+          let targetCell = sheet.getRange(userIdx, rewardIdx)
+          let currVal = targetCell.getValue()
+          if (typeof(currVal) === "number") {
+            targetCell.setValue(currVal + 1)
+          } else {
+            targetCell.setValue(1)
+          }
         }
-        // update the target cell
-        // Logger.log("setting the target cell: (" + userIdx + ", " + rewardIdx + ")")
-        cellLock.waitLock(600000)
-        let targetCell = sheet.getRange(userIdx, rewardIdx)
-        let currVal = targetCell.getValue()
-        if (typeof(currVal) === "number") {
-          targetCell.setValue(currVal + 1)
-        } else {
-          targetCell.setValue(1)
-        }
-        SpreadsheetApp.flush()
-        cellLock.releaseLock()
-      }
+      })
+      SpreadsheetApp.flush()
+      updateLock.releaseLock()
     })
   }
   
@@ -156,6 +165,4 @@ function getOrInsertConditionFromRange(targetRange, condition, isUserSearch, tar
     }
     return emptySlot
   }
-
-  // not reachable
 }
